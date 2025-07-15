@@ -1,0 +1,25 @@
+# Build artifacts
+*.jar
+*.war
+*.zip
+*.tar.gz
+target/
+build/
+
+# IDE-specific files
+.idea/
+.vscode/
+.project/
+.settings/
+.classpath
+*.iml
+.DS_Store # macOS specific
+
+# Operating System files
+Thumbs.db # Windows specific
+
+# Sensitive files (your local database password)
+secrets.properties
+
+# Log files
+*.log

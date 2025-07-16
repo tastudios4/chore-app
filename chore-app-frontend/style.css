@@ -1,0 +1,102 @@
+/* style.css */
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Light gray background */
+}
+.container {
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #ffffff; /* White card background */
+    border-radius: 1rem; /* Rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+.section-title {
+    border-bottom: 2px solid #e5e7eb; /* Light gray border */
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151; /* Darker gray text */
+}
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group input[type="date"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db; /* Light border */
+    border-radius: 0.5rem; /* Rounded input fields */
+    font-size: 1rem;
+    color: #4b5563; /* Medium gray text */
+    transition: border-color 0.2s;
+}
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="date"]:focus {
+    outline: none;
+    border-color: #3b82f6; /* Blue focus border */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Blue glow on focus */
+}
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.btn-primary {
+    background-color: #3b82f6; /* Blue */
+    color: #ffffff;
+}
+.btn-primary:hover {
+    background-color: #2563eb; /* Darker blue on hover */
+    transform: translateY(-1px);
+}
+.btn-secondary {
+    background-color: #6b7280; /* Gray */
+    color: #ffffff;
+}
+.btn-secondary:hover {
+    background-color: #4b5563; /* Darker gray on hover */
+    transform: translateY(-1px);
+}
+.message {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+.message.success {
+    background-color: #d1fae5; /* Light green */
+    color: #065f46; /* Dark green text */
+}
+.message.error {
+    background-color: #fee2e2; /* Light red */
+    color: #991b1b; /* Dark red text */
+}
+.list-item {
+    background-color: #f9fafb; /* Very light gray for list items */
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+}
+.list-item:last-child {
+    margin-bottom: 0;
+}
+.list-item button {
+    margin-left: 1rem;
+}

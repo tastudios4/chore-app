@@ -1,6 +1,11 @@
 // script.js
 const API_BASE_URL = 'http://localhost:8080/api'; // Your Spring Boot backend URL
 
+// --- Navigation ---
+function navigateTo(page) {
+    window.location.href = page;
+}
+
 // Helper function to display messages
 function showMessage(elementId, message, type) {
     const element = document.getElementById(elementId);
@@ -14,7 +19,7 @@ function hideMessage(elementId) {
     document.getElementById(elementId).classList.add('hidden');
 }
 
-// --- User Management ---
+// --- User Management (Login/Register) ---
 
 async function registerUser() {
     const username = document.getElementById('registerUsername').value;
@@ -36,9 +41,12 @@ async function registerUser() {
         const data = await response.json();
 
         if (response.ok) {
-            showMessage('registerUserMessage', `User registered! ID: ${data.id}, Username: ${data.username}`, 'success');
+            showMessage('registerUserMessage', `User registered! ID: ${data.id}, Username: ${data.username}. You can now log in.`, 'success');
             document.getElementById('registerUsername').value = '';
             document.getElementById('registerPassword').value = '';
+            // Optionally pre-fill login fields or redirect
+            document.getElementById('loginUsername').value = username;
+            document.getElementById('loginPassword').value = password;
         } else {
             showMessage('registerUserMessage', `Error: ${data.message || response.statusText}`, 'error');
         }
@@ -48,27 +56,36 @@ async function registerUser() {
     }
 }
 
-async function fetchUserPoints() {
-    const userId = document.getElementById('userIdPoints').value;
-    hideMessage('userPointsDisplay');
+async function loginUser() {
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+    hideMessage('loginUserMessage');
 
-    if (!userId) {
-        showMessage('userPointsDisplay', 'Please enter a User ID.', 'error');
+    if (!username || !password) {
+        showMessage('loginUserMessage', 'Please enter both username and password.', 'error');
         return;
     }
 
+    // For now, we'll simulate login by just checking if user exists.
+    // A real login would involve authentication (e.g., Spring Security, JWT).
     try {
-        const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+        const response = await fetch(`${API_BASE_URL}/users/by-username/${username}`);
         const data = await response.json();
 
-        if (response.ok) {
-            showMessage('userPointsDisplay', `User: ${data.username}, Points: ${data.points}`, 'success');
+        if (response.ok && data.password === password) { // Basic password check (NOT SECURE FOR PROD)
+            showMessage('loginUserMessage', `Logged in as ${data.username}! User ID: ${data.id}`, 'success');
+            // Store user ID for later use (e.g., in tribe management, chore completion)
+            localStorage.setItem('loggedInUserId', data.id);
+            localStorage.setItem('loggedInUsername', data.username);
+            localStorage.setItem('loggedInUserTribeId', data.tribe ? data.tribe.id : null); // Store tribe ID if user is in a tribe
+            // Redirect to tribe management page after successful login
+            navigateTo('tribe_management.html');
         } else {
-            showMessage('userPointsDisplay', `Error: ${data.message || response.statusText}`, 'error');
+            showMessage('loginUserMessage', `Login failed: Invalid username or password.`, 'error');
         }
     } catch (error) {
-        console.error('Error fetching user points:', error);
-        showMessage('userPointsDisplay', 'Network error or server unreachable.', 'error');
+        console.error('Error logging in:', error);
+        showMessage('loginUserMessage', 'Network error or server unreachable or user not found.', 'error');
     }
 }
 
@@ -126,6 +143,10 @@ async function joinTribe() {
             showMessage('joinTribeMessage', `User ${data.username} joined tribe ${data.tribe.name}!`, 'success');
             document.getElementById('joinUserId').value = '';
             document.getElementById('joinTribeCode').value = '';
+            // Update stored user info if this was the logged-in user
+            if (localStorage.getItem('loggedInUserId') === userId) {
+                localStorage.setItem('loggedInUserTribeId', data.tribe.id);
+            }
         } else {
             showMessage('joinTribeMessage', `Error: ${data.message || response.statusText}`, 'error');
         }
@@ -135,209 +156,97 @@ async function joinTribe() {
     }
 }
 
-// --- Chore Management ---
+async function leaveTribe() {
+    const userId = document.getElementById('leaveUserId').value;
+    hideMessage('leaveTribeMessage');
 
-async function createChore() {
-    const tribeId = document.getElementById('createChoreTribeId').value;
-    const name = document.getElementById('choreName').value;
-    const description = document.getElementById('choreDescription').value;
-    const pointsValue = document.getElementById('chorePoints').value;
-    const dueDate = document.getElementById('choreDueDate').value; // YYYY-MM-DD format
-    const isRecurring = document.getElementById('isRecurringChore').checked;
-    const recurrencePattern = document.getElementById('recurrencePattern').value;
-    hideMessage('createChoreMessage');
-
-    if (!tribeId || !name || !pointsValue) {
-        showMessage('createChoreMessage', 'Please fill in Chore Name, Points Value, and Tribe ID.', 'error');
-        return;
-    }
-    if (isRecurring && !recurrencePattern) {
-        showMessage('createChoreMessage', 'Please provide a recurrence pattern for recurring chores.', 'error');
-        return;
-    }
-
-    const choreData = {
-        name,
-        description,
-        pointsValue: parseInt(pointsValue),
-        dueDate: dueDate || null, // Send null if empty
-        isRecurring,
-        recurrencePattern: isRecurring ? recurrencePattern : null,
-        isActive: true
-    };
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/chores/tribe/${tribeId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(choreData)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            showMessage('createChoreMessage', `Chore created! ID: ${data.id}, Name: ${data.name}, Recurring: ${data.isRecurring}`, 'success');
-            // Clear form fields
-            document.getElementById('choreName').value = '';
-            document.getElementById('choreDescription').value = '';
-            document.getElementById('chorePoints').value = '10';
-            document.getElementById('choreDueDate').value = '';
-            document.getElementById('isRecurringChore').checked = false;
-            document.getElementById('recurrencePattern').value = '';
-            // Optionally refresh active chores list if tribe ID matches
-            if (document.getElementById('activeChoresTribeId').value === tribeId) {
-                fetchActiveChores();
-            }
-        } else {
-            showMessage('createChoreMessage', `Error: ${data.message || response.statusText}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error creating chore:', error);
-        showMessage('createChoreMessage', 'Network error or server unreachable.', 'error');
-    }
-}
-
-async function fetchActiveChores() {
-    const tribeId = document.getElementById('activeChoresTribeId').value;
-    const choresListDiv = document.getElementById('activeChoresList');
-    hideMessage('activeChoresMessage');
-    choresListDiv.innerHTML = '<p class="text-gray-500">Loading chores...</p>';
-
-    if (!tribeId) {
-        showMessage('activeChoresMessage', 'Please enter a Tribe ID.', 'error');
-        choresListDiv.innerHTML = '<p class="text-gray-500">No active chores loaded yet.</p>';
+    if (!userId) {
+        showMessage('leaveTribeMessage', 'Please enter your User ID.', 'error');
         return;
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/chores/tribe/${tribeId}/active`);
-        const data = await response.json();
-
-        if (response.ok) {
-            choresListDiv.innerHTML = ''; // Clear previous list
-            if (data.length === 0) {
-                choresListDiv.innerHTML = '<p class="text-gray-500">No active chores found for this tribe.</p>';
-            } else {
-                data.forEach(chore => {
-                    const choreItem = document.createElement('div');
-                    choreItem.className = 'list-item';
-                    choreItem.innerHTML = `
-                        <span>
-                            <strong>ID: ${chore.id}</strong> - ${chore.name} (${chore.pointsValue} pts)
-                            ${chore.dueDate ? ` - Due: ${chore.dueDate}` : ''}
-                            ${chore.isRecurring ? ` (Recurring: ${chore.recurrencePattern})` : ''}
-                        </span>
-                        <button onclick="prefillCompleteChore(${chore.id})" class="btn btn-secondary text-sm px-3 py-1">Complete</button>
-                    `;
-                    choresListDiv.appendChild(choreItem);
-                });
-            }
-        } else {
-            showMessage('activeChoresMessage', `Error: ${data.message || response.statusText}`, 'error');
-            choresListDiv.innerHTML = '<p class="text-gray-500">Failed to load chores.</p>';
-        }
-    } catch (error) {
-        console.error('Error fetching active chores:', error);
-        showMessage('activeChoresMessage', 'Network error or server unreachable.', 'error');
-        choresListDiv.innerHTML = '<p class="text-gray-500">Failed to load chores.</p>';
-    }
-}
-
-function prefillCompleteChore(choreId) {
-    document.getElementById('completeChoreId').value = choreId;
-    // Optionally scroll to the complete chore section
-    document.getElementById('completeChoreId').scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-// --- Chore Completion ---
-
-async function completeChore() {
-    const choreId = document.getElementById('completeChoreId').value;
-    const userId = document.getElementById('completingUserId').value;
-    hideMessage('completeChoreMessage');
-
-    if (!choreId || !userId) {
-        showMessage('completeChoreMessage', 'Please enter both Chore ID and your User ID.', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/chore-completions/${choreId}/complete-by/${userId}`, {
-            method: 'POST',
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/leave-tribe`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' }
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            showMessage('completeChoreMessage', `Chore ID ${data.chore.id} completed by User ID ${data.completedBy.id}! Points Awarded: ${data.pointsAwarded}. User now has ${data.completedBy.points} points.`, 'success');
-            document.getElementById('completeChoreId').value = '';
-            // Optionally refresh user points and active chores list
-            fetchUserPoints();
-            fetchActiveChores();
-            fetchCompletionHistory();
-        } else {
-            showMessage('completeChoreMessage', `Error: ${data.message || response.statusText}`, 'error');
-        }
-    } catch (error) {
-        console.error('Error completing chore:', error);
-        showMessage('completeChoreMessage', 'Network error or server unreachable.', 'error');
-    }
-}
-
-async function fetchCompletionHistory() {
-    const userId = document.getElementById('historyUserId').value;
-    const historyListDiv = document.getElementById('completionHistoryList');
-    hideMessage('historyMessage');
-    historyListDiv.innerHTML = '<p class="text-gray-500">Loading history...</p>';
-
-    if (!userId) {
-        showMessage('historyMessage', 'Please enter a User ID.', 'error');
-        historyListDiv.innerHTML = '<p class="text-gray-500">No history loaded yet.</p>';
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/chore-completions/user/${userId}`);
-        const data = await response.json();
-
-        if (response.ok) {
-            historyListDiv.innerHTML = ''; // Clear previous list
-            if (data.length === 0) {
-                historyListDiv.innerHTML = '<p class="text-gray-500">No completion history found for this user.</p>';
-            } else {
-                data.forEach(completion => {
-                    const historyItem = document.createElement('div');
-                    historyItem.className = 'list-item';
-                    historyItem.innerHTML = `
-                        <span>
-                            <strong>Chore: ${completion.chore.name}</strong> (ID: ${completion.chore.id}) - Completed: ${new Date(completion.completionDate).toLocaleString()} - Awarded: ${completion.pointsAwarded} pts
-                        </span>
-                    `;
-                    historyListDiv.appendChild(historyItem);
-                });
+            showMessage('leaveTribeMessage', `User ${data.username} successfully left their tribe.`, 'success');
+            document.getElementById('leaveUserId').value = '';
+            // Clear stored tribe info if this was the logged-in user
+            if (localStorage.getItem('loggedInUserId') === userId) {
+                localStorage.removeItem('loggedInUserTribeId');
             }
         } else {
-            showMessage('historyMessage', `Error: ${data.message || response.statusText}`, 'error');
-            historyListDiv.innerHTML = '<p class="text-gray-500">Failed to load history.</p>';
+            showMessage('leaveTribeMessage', `Error: ${data.message || response.statusText}`, 'error');
         }
     } catch (error) {
-        console.error('Error fetching completion history:', error);
-        showMessage('historyMessage', 'Network error or server unreachable.', 'error');
-        historyListDiv.innerHTML = '<p class="text-gray-500">Failed to load history.</p>';
+        console.error('Error leaving tribe:', error);
+        showMessage('leaveTribeMessage', 'Network error or server unreachable.', 'error');
     }
 }
 
-// Set default values for convenience
+// --- Leaderboard Page Specific Logic ---
+async function loadLeaderboardPageData() {
+    const userId = localStorage.getItem('loggedInUserId');
+    const username = localStorage.getItem('loggedInUsername');
+    const currentUserPointsElement = document.getElementById('currentUserPoints');
+    const currentUsernameElement = document.getElementById('currentUsername');
+
+    if (username) {
+        currentUsernameElement.textContent = username;
+    } else {
+        currentUsernameElement.textContent = 'Not logged in';
+    }
+
+    if (userId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                currentUserPointsElement.textContent = data.points;
+            } else {
+                currentUserPointsElement.textContent = 'N/A';
+                console.error('Error fetching user points for leaderboard:', data.message || response.statusText);
+            }
+        } catch (error) {
+            currentUserPointsElement.textContent = 'N/A';
+            console.error('Network error fetching user points for leaderboard:', error);
+        }
+    } else {
+        currentUserPointsElement.textContent = 'N/A (Log in)';
+    }
+}
+
+// --- Initial Setup / Default Values ---
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('registerUsername').value = '';
-    document.getElementById('registerPassword').value = '';
-    document.getElementById('userIdPoints').value = '';
-    document.getElementById('createTribeName').value = '';
-    document.getElementById('joinUserId').value = '';
-    // joinTribeCode needs to be manually copied from backend response
-    document.getElementById('createChoreTribeId').value = '';
-    document.getElementById('activeChoresTribeId').value = '';
-    document.getElementById('completingUserId').value = '';
-    document.getElementById('historyUserId').value = '';
+    // Set default values for convenience on relevant pages
+    if (document.getElementById('registerUsername')) { // Only on login.html
+        document.getElementById('registerUsername').value = 'testUser';
+        document.getElementById('registerPassword').value = 'testPassword';
+        document.getElementById('loginUsername').value = 'testUser';
+        document.getElementById('loginPassword').value = 'testPassword';
+    }
+
+    if (document.getElementById('joinUserId')) { // Only on tribe_management.html
+        const loggedInUserId = localStorage.getItem('loggedInUserId');
+        if (loggedInUserId) {
+            document.getElementById('joinUserId').value = loggedInUserId;
+            document.getElementById('leaveUserId').value = loggedInUserId;
+        } else {
+            // Fallback if not logged in, or for initial setup
+            document.getElementById('joinUserId').value = '1';
+            document.getElementById('leaveUserId').value = '1';
+        }
+        document.getElementById('createTribeName').value = 'My New Tribe';
+        // joinTribeCode needs to be manually copied from backend response
+    }
+
+    if (document.getElementById('currentUserPoints')) { // Only on leaderboard.html
+        loadLeaderboardPageData();
+    }
 });

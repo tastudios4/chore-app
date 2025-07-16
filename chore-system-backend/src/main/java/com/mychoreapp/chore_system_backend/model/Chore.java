@@ -12,8 +12,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.LocalDate; // For due date
+import java.time.LocalDate;
 
 /**
  * Represents a Chore (task) that needs to be completed within a Tribe.
@@ -40,10 +42,12 @@ public class Chore {
     @Column(nullable = false) 
     private int pointsValue; // How many points a user gets for completing this chore
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dueDate; // When the chore should ideally be completed (nullable)
 
     @Column(nullable = false) // Recurring flag cannot be null, default to false
-    private boolean isRecurring = false; // Whether this chore repeats
+    @JsonProperty("isRecurring")
+    private boolean isRecurring; // Whether this chore repeats
 
     private String recurrencePattern; // If recurring, how often (e.g., "DAILY", "WEEKLY", "MONTHLY") (nullable)
 
@@ -75,7 +79,6 @@ public class Chore {
         this.description = description;
         this.pointsValue = pointsValue;
         this.tribe = tribe;
-        this.isRecurring = false;
         this.isActive = true;
         this.dueDate = null;
         this.recurrencePattern = null;

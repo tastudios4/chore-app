@@ -47,7 +47,7 @@ public class User {
 
     // To distinguish authentication method
     @Column(nullable = false)
-    private String authenticationType; // e.g., "BASIC", "GOOGLE"
+    private String authenticationType = "BASIC"; // Default to BASIC if not specified e.g., "BASIC", "GOOGLE"
 
     private int points;
 

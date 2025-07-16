@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import java.util.Optional;
  */
 @RestController // Marks this class as a REST controller, meaning it handles web requests
 @RequestMapping("/api/users") // Base path for all endpoints in this controller
+@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
     private final UserService userService; // Declare the service dependency

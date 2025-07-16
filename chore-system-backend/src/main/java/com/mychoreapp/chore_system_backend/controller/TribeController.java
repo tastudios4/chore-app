@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import java.util.Optional;
  */
 @RestController // Marks this class as a REST controller
 @RequestMapping("/api/tribes") // Base path for all endpoints in this controller
+@CrossOrigin(origins = "http://localhost:3000")
 public class TribeController {
 
     private final TribeService tribeService; // Declare the service dependency

@@ -1,7 +1,9 @@
 package com.mychoreapp.chore_system_backend.service;
 
-import com.mychoreapp.chore_system_backend.repository.IUserRepository;
+import com.mychoreapp.chore_system_backend.model.Tribe;
 import com.mychoreapp.chore_system_backend.model.User;
+import com.mychoreapp.chore_system_backend.repository.IUserRepository;
+import com.mychoreapp.chore_system_backend.repository.ITribeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,15 +19,19 @@ import java.util.Optional;
 public class UserService {
 
     private final IUserRepository userRepository; 
+    private final ITribeRepository tribeRepository;
 
     /**
      * Constructor for dependency injection.
      * Spring automatically injects an instance of IUserRepository.
      * @param userRepository The repository to be injected.
+     * @param tribeRepository The repository to be injected.
      */
     @Autowired // This annotation tells Spring to inject the IUserRepository dependency
-    public UserService(final IUserRepository userRepository) {
+    public UserService(final IUserRepository userRepository, 
+                       final ITribeRepository tribeRepository) {
         this.userRepository = userRepository;
+        this.tribeRepository = tribeRepository;
     }
 
     /**
@@ -50,7 +56,7 @@ public class UserService {
         // For a real application, passwords should be hashed here before saving
         // user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        return userRepository.save(user); // Save the user to the database
+        return userRepository.save(user);
     }
 
     /**
@@ -105,8 +111,8 @@ public class UserService {
      */
     public Optional<User> addPointsToUser(final Long id, final int pointsToAdd) {
         return userRepository.findById(id).map(user -> {
-            user.addPoints(pointsToAdd); // Use the addPoints method from the User entity
-            return userRepository.save(user); // Save the updated user
+            user.addPoints(pointsToAdd); 
+            return userRepository.save(user); 
         });
     }
 
@@ -115,6 +121,63 @@ public class UserService {
      * @param id The ID of the user to delete.
      */
     public void deleteUser(final Long id) {
-        userRepository.deleteById(id); // JpaRepository provides deleteById
+        userRepository.deleteById(id); 
+    }
+
+    /**
+     * Assigns a user to a tribe using the tribe's join code.
+     * @param userId The ID of the user to assign.
+     * @param joinCode The join code of the tribe to join.
+     * @return An Optional containing the updated User object if successful, or empty if user or tribe not found.
+     * @throws IllegalArgumentException if the user is already in a tribe or if the join code is invalid.
+     */
+    public Optional<User> joinTribe(final Long userId, final String joinCode) {
+        final Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final User user = optionalUser.get();
+
+        // check if user already belongs to a tribe
+        // NON MVP: user can belong to multiple tribes
+        if (user.getTribe() != null) {
+            throw new IllegalArgumentException("User already belongs to a tribe");
+        }
+
+        // check if tribe exists
+        final Optional<Tribe> optionalTribe = tribeRepository.findByJoinCode(joinCode);
+        if (optionalTribe.isEmpty()) {
+            return Optional.empty();
+        }
+        final Tribe tribe = optionalTribe.get();
+        
+        // set the tribe for the user
+        user.setTribe(tribe);
+        return Optional.of(userRepository.save(user));
+    }
+
+    /**
+     * Removes a user from their current tribe.
+     * @param userId The ID of the user to remove from a tribe.
+     * @return An Optional containing the updated User object if successful, or empty if user not found.
+     * @throws IllegalArgumentException if the user is not currently in a tribe.
+     */
+    public Optional<User> leaveTribe(final Long userId) {
+        final Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final User user = optionalUser.get();
+        
+        // Check if user is actually in a tribe before trying to remove them
+        if (user.getTribe() == null) {
+            throw new IllegalArgumentException("User is not currently a member of any tribe.");
+        }
+
+        // Set the user's tribe to null to remove them from the tribe
+        user.setTribe(null);
+        return Optional.of(userRepository.save(user));
     }
 }

@@ -155,4 +155,43 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found if user doesn't exist
         }
     }
+
+    /**
+     * Endpoint for a user to join a tribe.
+     * Endpoint: PUT /api/users/{userId}/join-tribe/{joinCode}
+     * @param userId The ID of the user.
+     * @param joinCode The join code of the tribe to join.
+     * @return ResponseEntity with the updated User and HTTP status 200 (OK),
+     * or 400 (Bad Request) if user is already in a tribe,
+     * or 404 (Not Found) if user or tribe does not exist.
+     */
+    @PutMapping("/{userId}/join-tribe/{joinCode}")
+    public ResponseEntity<User> joinTribe(@PathVariable final Long userId, @PathVariable final String joinCode) {
+        try {
+            Optional<User> updatedUser = userService.joinTribe(userId, joinCode);
+            return updatedUser.map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+                              .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST); // User already in a tribe
+        }
+    }
+
+    /**
+     * Endpoint for a user to leave their current tribe.
+     * Endpoint: PUT /api/users/{userId}/leave-tribe
+     * @param userId The ID of the user.
+     * @return ResponseEntity with the updated User and HTTP status 200 (OK),
+     * or 400 (Bad Request) if user is not in a tribe,
+     * or 404 (Not Found) if user does not exist.
+     */
+    @PutMapping("/{userId}/leave-tribe")
+    public ResponseEntity<User> leaveTribe(@PathVariable final Long userId) {
+        try {
+            Optional<User> updatedUser = userService.leaveTribe(userId);
+            return updatedUser.map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+                              .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST); // User not in a tribe
+        }
+    }
 }

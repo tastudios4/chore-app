@@ -6,7 +6,14 @@ import com.mychoreapp.chore_system_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +34,7 @@ public class UserController {
      * @param userService The service to be injected.
      */
     @Autowired // This annotation tells Spring to inject the UserService dependency
-    public UserController(UserService userService) {
+    public UserController(final UserService userService) {
         this.userService = userService;
     }
 
@@ -39,7 +46,7 @@ public class UserController {
      * or 400 (Bad Request) if username/email already exists.
      */
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
+    public ResponseEntity<User> registerUser(@RequestBody final User user) {
         try {
             User registeredUser = userService.registerUser(user);
             return new ResponseEntity<>(registeredUser, HttpStatus.CREATED); // Return 201 Created on success
@@ -57,7 +64,7 @@ public class UserController {
      * or 404 (Not Found) if user does not exist.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<User> getUserById(@PathVariable final Long id) {
         Optional<User> user = userService.getUserById(id);
         return user.map(value -> new ResponseEntity<>(value, HttpStatus.OK)) // If user found, return 200 OK
                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND)); // If not found, return 404 Not Found
@@ -71,7 +78,7 @@ public class UserController {
      * or 404 (Not Found) if user does not exist.
      */
     @GetMapping("/by-username/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<User> getUserByUsername(@PathVariable final String username) {
         Optional<User> user = userService.getUserByUsername(username);
         return user.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -85,7 +92,7 @@ public class UserController {
      * or 404 (Not Found) if user does not exist.
      */
     @GetMapping("/by-google-id/{googleId}")
-    public ResponseEntity<User> getUserByGoogleId(@PathVariable String googleId) {
+    public ResponseEntity<User> getUserByGoogleId(@PathVariable final String googleId) {
         Optional<User> user = userService.getUserByGoogleId(googleId);
         return user.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -99,7 +106,7 @@ public class UserController {
      * or 404 (Not Found) if user does not exist.
      */
     @GetMapping("/by-email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+    public ResponseEntity<User> getUserByEmail(@PathVariable final String email) {
         Optional<User> user = userService.getUserByEmail(email);
         return user.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -125,7 +132,7 @@ public class UserController {
      * or 404 (Not Found) if user does not exist.
      */
     @PutMapping("/{id}/add-points/{pointsToAdd}")
-    public ResponseEntity<User> addPointsToUser(@PathVariable Long id, @PathVariable int pointsToAdd) {
+    public ResponseEntity<User> addPointsToUser(@PathVariable final Long id, @PathVariable final int pointsToAdd) {
         Optional<User> updatedUser = userService.addPointsToUser(id, pointsToAdd);
         return updatedUser.map(user -> new ResponseEntity<>(user, HttpStatus.OK))
                          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -139,7 +146,7 @@ public class UserController {
      * or 404 (Not Found) if user does not exist (though deleteById often doesn't throw on non-existence).
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable final Long id) {
         // Check if user exists before attempting to delete (optional, but good practice for clearer responses)
         if (userService.getUserById(id).isPresent()) {
             userService.deleteUser(id);

@@ -21,7 +21,7 @@ public interface IUserRepository extends JpaRepository<User, Long> {
      * @param username The username to search for.
      * @return An Optional containing the User if found, or empty if not found.
      */
-    Optional<User> findByUsername(String username);
+    Optional<User> findByUsername(final String username);
 
     /**
      * Finds a User by their Google ID.
@@ -29,7 +29,7 @@ public interface IUserRepository extends JpaRepository<User, Long> {
      * @param googleId The Google ID to search for.
      * @return An Optional containing the User if found, or empty if not found.
      */
-    Optional<User> findByGoogleId(String googleId);
+    Optional<User> findByGoogleId(final String googleId);
 
     /**
      * Finds a User by their email address.
@@ -37,5 +37,5 @@ public interface IUserRepository extends JpaRepository<User, Long> {
      * @param email The email address to search for.
      * @return An Optional containing the User if found, or empty if not found.
      */
-    Optional<User> findByEmail(String email);
+    Optional<User> findByEmail(final String email);
 }

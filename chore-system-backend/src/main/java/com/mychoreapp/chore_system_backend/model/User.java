@@ -5,11 +5,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
-import jakarta.persistence.Table; // Import the Table annotation
-import lombok.Getter; // Import Lombok annotations
+import jakarta.persistence.Table;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor; // For the default constructor
-import lombok.ToString; // For toString() generation
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * Represents a user in the chore system.
@@ -48,6 +50,10 @@ public class User {
     private String authenticationType; // e.g., "BASIC", "GOOGLE"
 
     private int points;
+
+    @ManyToOne // Many Users can belong to One Tribe
+    @JoinColumn(name = "tribe_id", nullable = true) // Specifies the foreign key column in the 'users' table
+    private Tribe tribe; // The Tribe this user belongs to. Nullable if a user doesn't belong to a tribe yet.
     
     /**
      * Constructor for creating a new User object with traditional username/password.
@@ -61,6 +67,7 @@ public class User {
         this.password = password;
         this.points = 0; // New users start with 0 points
         this.authenticationType = "BASIC"; // Default to basic authentication
+        this.tribe = null; // New users don't belong to a tribe yet
     }
 
     /**
@@ -81,6 +88,7 @@ public class User {
         this.profilePictureUrl = profilePictureUrl;
         this.points = 0; // New users start with 0 points
         this.authenticationType = "GOOGLE"; // Set authentication type to Google
+        this.tribe = null; // New users don't belong to a tribe yet
     }
 
     /**
